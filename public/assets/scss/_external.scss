@@ -1,0 +1,40 @@
+.Toastify__toast {
+  font-family: $main-font !important;
+}
+
+.form-control.is-invalid,
+.is-invalid {
+  input {
+    border-color: $danger !important;
+    border-width: 2px !important;
+  }
+
+  border-color: $danger !important;
+  border-width: 2px !important;
+}
+
+label {
+  a {
+    color: $color-two;
+  }
+
+  a:visited {
+    color: $color-one;
+    transition: all 0.5s;
+  }
+
+  a:hover {
+    color: $color-two;
+    transition: all 0.5s;
+  }
+}
+
+.spinner-border {
+  display: block !important;
+  margin: 8px auto !important;
+}
+
+.rc-anchor {
+  position: absolute !important;
+  z-index: 99999999 !important;
+}

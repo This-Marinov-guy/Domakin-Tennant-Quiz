@@ -199,6 +199,29 @@ export default function Home() {
     <>
       <Head>
         <title>Tenant Quiz - Domakin</title>
+        <meta
+          name="description"
+          content="Take the Domakin tenant quiz — swipe right for yes, left for no — so we can match you with the right home in the Netherlands."
+        />
+
+        {/* Open Graph (link previews on social / messaging apps) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Domakin" />
+        <meta property="og:title" content="Tenant Quiz - Domakin" />
+        <meta
+          property="og:description"
+          content="Swipe right for yes, left for no to help us match you with the right home."
+        />
+        <meta property="og:image" content="/android-chrome-512x512.png" />
+
+        {/* Twitter card */}
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Tenant Quiz - Domakin" />
+        <meta
+          name="twitter:description"
+          content="Swipe right for yes, left for no to help us match you with the right home."
+        />
+        <meta name="twitter:image" content="/android-chrome-512x512.png" />
       </Head>
       <section
         className="quiz-page py-120 lg-py-80"

@@ -129,6 +129,22 @@
     line-height: 1.5;
   }
 
+  &__progress {
+    width: 100%;
+    height: 6px;
+    border-radius: 999px;
+    // background-color: rgba(245, 126, 32, 0.18);
+    overflow: hidden;
+  }
+
+  &__progress-fill {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background-color: #f57e20;
+    transition: width 0.3s ease;
+  }
+
   // YES / NO stamps that fade in as you drag.
   &__badge {
     position: absolute;

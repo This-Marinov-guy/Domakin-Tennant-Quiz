@@ -3,7 +3,7 @@
 import { useRef, useState, type PointerEvent } from "react";
 
 interface SwipeCardProps {
-  progressLabel: string;
+  progressPercent: number;
   text: string;
   /** answer === true  -> swiped right (YES); false -> swiped left (NO). */
   onSwipe: (answer: boolean) => void;
@@ -18,7 +18,7 @@ const FLY_DISTANCE = 1000;
 const MAX_ROTATE = 16;
 
 export default function SwipeCard({
-  progressLabel,
+  progressPercent,
   text,
   onSwipe,
   disabled = false,
@@ -77,6 +77,7 @@ export default function SwipeCard({
   const hasTransform = leaving !== null || dx !== 0;
 
   const overlayOpacity = Math.min(1, Math.abs(offset) / COMMIT_THRESHOLD);
+  const safeProgressPercent = Math.max(0, Math.min(100, progressPercent));
 
   return (
     <div className="swipe-card-frame swipe-card-enter">
@@ -117,8 +118,18 @@ export default function SwipeCard({
           NO
         </span>
 
-        <div className="text-uppercase fs-14 fw-500 opacity-75 mb-15">
-          {progressLabel}
+        <div
+          className="swipe-card__progress mb-30"
+          role="progressbar"
+          aria-label="Quiz progress"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={safeProgressPercent}
+        >
+          <span
+            className="swipe-card__progress-fill"
+            style={{ width: `${safeProgressPercent}%` }}
+          />
         </div>
         <p className="swipe-card__text fs-22 fw-500 m0">{text}</p>
       </div>

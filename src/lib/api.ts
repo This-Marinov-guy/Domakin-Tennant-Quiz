@@ -50,6 +50,10 @@ export interface NextCardResponse {
   };
 }
 
+export interface SessionProgressResponse {
+  progress: NonNullable<NextCardResponse["progress"]>;
+}
+
 // The swipe UI only decides the boolean (right = true, left = false) and which
 // card it answered. The server derives tenant_id, topic_key, statement_key,
 // card_version and the timestamps from the session + card definition.
@@ -108,6 +112,12 @@ export const quizApi = {
   getNextCard(sessionId: string) {
     return request<NextCardResponse>(
       `/next-card/${encodeURIComponent(sessionId)}`
+    );
+  },
+
+  getSessionProgress(sessionId: string) {
+    return request<SessionProgressResponse>(
+      `/phase0/sessions/${encodeURIComponent(sessionId)}/progress`
     );
   },
 

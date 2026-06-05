@@ -12,13 +12,55 @@ type LoadState =
   | { kind: "ready"; data: NextCardResponse };
 
 const ACTIVE_SESSION_STORAGE_KEY = "domakin_tenant_quiz_active_session_id";
+const SESSION_PROGRESS_STORAGE_PREFIX = "domakin_tenant_quiz_progress:";
 
-function getProgressLabel(data: NextCardResponse) {
-  if (!data.progress) {
-    return "Question";
+type StoredProgress = NonNullable<NextCardResponse["progress"]>;
+type NextCardResponseWithProgress = NextCardResponse & {
+  progress: StoredProgress;
+};
+
+function getProgressStorageKey(sessionId: string) {
+  return `${SESSION_PROGRESS_STORAGE_PREFIX}${sessionId}`;
+}
+
+function readStoredProgress(sessionId: string): StoredProgress | undefined {
+  if (!sessionId) return undefined;
+
+  try {
+    const raw = window.localStorage.getItem(getProgressStorageKey(sessionId));
+    if (!raw) return undefined;
+
+    const progress = JSON.parse(raw) as Partial<StoredProgress>;
+    if (
+      typeof progress.current === "number" &&
+      typeof progress.total === "number" &&
+      typeof progress.answered === "number"
+    ) {
+      return progress as StoredProgress;
+    }
+  } catch {
+    window.localStorage.removeItem(getProgressStorageKey(sessionId));
   }
 
-  return `Question ${data.progress.current} of ${data.progress.total}`;
+  return undefined;
+}
+
+function saveStoredProgress(sessionId: string, progress: StoredProgress) {
+  if (!sessionId) return;
+  window.localStorage.setItem(
+    getProgressStorageKey(sessionId),
+    JSON.stringify(progress)
+  );
+}
+
+function getProgressPercent(data: NextCardResponse, sessionId: string) {
+  const progress = data.progress ?? readStoredProgress(sessionId);
+
+  if (!progress || progress.total <= 0) {
+    return 0;
+  }
+
+  return Math.round((progress.current / progress.total) * 100);
 }
 
 export default function Home() {
@@ -35,8 +77,17 @@ export default function Home() {
     setState({ kind: "loading" });
     quizApi
       .getNextCard(sid)
+      .then(async (data): Promise<NextCardResponseWithProgress> => {
+        if (data.progress) {
+          return { ...data, progress: data.progress };
+        }
+
+        const { progress } = await quizApi.getSessionProgress(sid);
+        return { ...data, progress };
+      })
       .then((data) => {
         window.localStorage.setItem(ACTIVE_SESSION_STORAGE_KEY, sid);
+        saveStoredProgress(sid, data.progress);
         shownAt.current = new Date().toISOString();
         setState({ kind: "ready", data });
       })
@@ -48,6 +99,7 @@ export default function Home() {
         ) {
           window.localStorage.removeItem(ACTIVE_SESSION_STORAGE_KEY);
         }
+        window.localStorage.removeItem(getProgressStorageKey(sid));
         setState({ kind: "not_found" });
       });
   }, []);
@@ -104,6 +156,23 @@ export default function Home() {
         })
         .finally(() => {
           setSubmitting(false);
+          const currentProgress =
+            state.data.progress ?? readStoredProgress(sessionId);
+
+          if (currentProgress) {
+            saveStoredProgress(sessionId, {
+              ...currentProgress,
+              answered: Math.min(
+                currentProgress.answered + 1,
+                currentProgress.total
+              ),
+              current: Math.min(
+                currentProgress.current + 1,
+                currentProgress.total
+              ),
+            });
+          }
+
           load(sessionId);
         });
     },
@@ -123,8 +192,8 @@ export default function Home() {
 
   const card = state.kind === "ready" ? state.data.card : undefined;
   const step = state.kind === "ready" ? state.data.step : "";
-  const progressLabel =
-    state.kind === "ready" ? getProgressLabel(state.data) : "Question";
+  const progressPercent =
+    state.kind === "ready" ? getProgressPercent(state.data, sessionId) : 0;
 
   return (
     <>
@@ -159,7 +228,7 @@ export default function Home() {
               ) : card ? (
                 <SwipeCard
                   key={card.card_id}
-                  progressLabel={progressLabel}
+                  progressPercent={progressPercent}
                   text={card.text}
                   onSwipe={handleSwipe}
                   disabled={submitting}
